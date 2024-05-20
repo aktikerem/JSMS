@@ -8,32 +8,22 @@ public class clint{
         public static void main(String[] args) throws IOException, InterruptedException{
         final String smtpServer = "alt2.gmail-smtp-in.l.google.com";
         final int port = 25;
+	final int msgID = (int) (Math.random()*100000) + 10000;
         EMAIL email = new EMAIL(smtpServer,port);
 //	email.startReader();
-	email.PacketHandle("EHLO smtp.gmail.com\r\n");
-	Thread.sleep(500);
+	email.handleEhlo();
+
 	email.PacketHandle("MAIL FROM:<admin@aktikerem.org>\r\n");
-	Thread.sleep(500);
 	email.PacketHandle("RCPT TO:<kerem.akti@gmail.com>\r\n");
-	Thread.sleep(500);
 	email.PacketHandle("DATA\r\n");
-	Thread.sleep(500);
 	email.PacketHandle("From: admin@aktikerem.com\r\n");
-	Thread.sleep(500);
 	email.PacketHandle("To: kerem.akti@gmail.com\r\n");
-//	Thread.sleep(500);
-//	email.PacketHandle("Subject: yopers ");
-//	Thread.sleep(500);
-//	email.PacketHandle("Message-ID: <2131400034@aktikerem.org> ");
-//	Thread.sleep(500);
-//	email.PacketHandle("Date: Mon, 20 May 2024 16:20:00 -0700 ");
-//	Thread.sleep(500);
-//	email.PacketHandle("\r\n.\r\n");
-//	email.PacketHandle("To: kerem.akti@gmail.com\r\n");
-//	email.PacketHandle("From: admin@aktikerem.org\r\nTo: kerem.akti@gmail.com\r\nSubject: dalugay\r\nMessage-ID: <243002962163@aktikerem.org>\r\nDate: Fri, 19 May 2024 16:20:00 -0700\r\n\r\ndali top fr\r\n.\r\n");
-	//email.PacketHandle("DATA \r\n");
-	//email.PacketHandle("\r\n.\r\n");
-	//email.PacketHandle("\r\n.\r\n");
+	email.PacketHandle("Subject: yopers\r\n");
+	email.PacketHandle("Message-ID: <"+msgID+"@aktikerem.org>\r\n");
+	email.PacketHandle("Date: Tue, 21 May 2024 16:20:00 -0700\r\n ");
+	email.PacketHandle("\r\nHere is our body or not\r\n");
+	email.PacketHandle(".\r\n");
+
 
 	            
 
@@ -60,28 +50,40 @@ this.port = port;
 this.soc = new Socket(this.smtpServer,this.port);
 this.writer = new PrintWriter(new OutputStreamWriter(soc.getOutputStream(), "UTF-8"), true);
 this.reader = new BufferedReader(new InputStreamReader(soc.getInputStream(), "UTF-8"));
+}
+public void handleEhlo() throws InterruptedException{ //handels first ehlo message.
+
+Thread.sleep(50);
+writer.print("ehlo smtp.aktikerem.org\r\n");
+writer.flush(); //doesnt listen for the response since it cant fail.
+Thread.sleep(100);
+
 
 }
 
-public void PacketHandle(String msg) throws IOException{
+
+public void PacketHandle(String msg) throws InterruptedException, IOException{
   writer.print(msg);
   writer.flush();
   //System.outrintln(msg);
   handleIS();
+  Thread.sleep(100);
+
 
 
 }
 
 
-public int handleIS() throws IOException{
-byte[] buf = new byte[1024];
-InputStream bufIS = soc.getInputStream();
-bufIS.skip(bufCountBytes);
-bufCountBytes += bufIS.read(buf);
+public void handleIS() throws IOException{
+
+System.out.println("debug");
+char[] buf = new char[512];
+InputStreamReader ISR = new InputStreamReader(soc.getInputStream(), "UTF-8");
+bufCountBytes += ISR.read(buf, bufCountBytes,((soc.getInputStream().available())));
+	
 for(int i = 0;i<buf.length;i++){
-System.out.print(buf[i]+" ");
+System.out.print(buf[i]);
 }
-return 10;
 }
 
 public void startReader() {
@@ -97,4 +99,10 @@ public void startReader() {
         });
         readerThread.start();
     }
+
+
+
+
+
+
 }
