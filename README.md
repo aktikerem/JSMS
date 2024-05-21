@@ -3,3 +3,9 @@ JSMS (Java SMTP Mail Server) is a complete mail server writen in java with socke
 
 in development
 
+current verision kinda works i wrote a cli interface so u can send emails trough args
+/*
+java clint emailtosend subject bodyofemail
+/*
+ u still need to vim into it and change my domain with yours though
+ 
