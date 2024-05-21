@@ -5,29 +5,29 @@ import java.lang.Thread;
 public class clint{
 
 
-        public static void main(String[] args) throws IOException, InterruptedException{
+        public static void main(String args[]) throws IOException, InterruptedException{
         final String smtpServer = "alt2.gmail-smtp-in.l.google.com";
         final int port = 25;
-	final int msgID = (int) (Math.random()*100000) + 10000;
+        final int msgID = (int) (Math.random()*100000) + 10000;
         EMAIL email = new EMAIL(smtpServer,port);
-//	email.startReader();
-//	email.handleEhlo();
-	email.PacketHandle("EHLO smtp.aktikerem.org\r\n");
-	email.PacketHandle("MAIL FROM:<admin@aktikerem.org>\r\n");
-	email.PacketHandle("RCPT TO:<kerem.akti@gmail.com>\r\n");
-	email.PacketHandle("DATA\r\n");
-	email.PacketHandle("From: admin@aktikerem.com\r\n");
-	email.PacketHandle("To: kerem.akti@gmail.com\r\n");
-	email.PacketHandle("Subject: yopers\r\n");
-	email.PacketHandle("Message-ID: <"+msgID+"@aktikerem.org>\r\n");
-	email.PacketHandle("Date: Tue, 21 May 2024 16:20:00 -0700\r\n ");
-	email.PacketHandle("\r\nHere is our body or not\r\n");
-	email.PacketHandle(".\r\n");
-	email.PacketHandle("QUIT");
+//      email.startReader();
+//      email.handleEhlo();
+        email.PacketHandle("EHLO smtp.aktikerem.org\r\n");
+        email.PacketHandle("MAIL FROM:<admin@aktikerem.org>\r\n");
+        email.PacketHandle("RCPT TO:<" + args[0] + ">\r\n");
+        email.PacketHandle("DATA\r\n");
+        email.PacketHandle("From: admin@aktikerem.com\r\n");
+        email.PacketHandle("To: " + args[0] + "\r\n");
+        email.PacketHandle("Subject: "+args[1]+"\r\n");
+        email.PacketHandle("Message-ID: <"+msgID+"@aktikerem.org>\r\n");
+//      email.PacketHandle("Date: Tue, 21 May 2024 16:20:00 -0700\r\n ");
+        email.PacketHandle("\r\n"+args[2]+"\r\n");
+        email.PacketHandle(".\r\n");
+        email.PacketHandle("QUIT");
 
-	            
+                    
 
-	}
+        }
 
 
 
@@ -85,7 +85,7 @@ char[] buf = new char[512];
 InputStreamReader ISR = new InputStreamReader(soc.getInputStream(), "UTF-8");
 //bufCountBytes += ISR.read(buf, bufCountBytes,((soc.getInputStream().available())));
 bufCountBytes += ISR.read(buf, 0,((soc.getInputStream().available())));
-	
+
 //for(int i = 0;i<buf.length;i++){
 String cod = "";
 for(int i = 0; i<buf.length;i++){
