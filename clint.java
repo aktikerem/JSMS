@@ -10,8 +10,7 @@ public class clint{
         final int port = 25;
 	final int msgID = (int) (Math.random()*100000) + 10000;
         EMAIL email = new EMAIL(smtpServer,port);
-//	email.startReader();
-//	email.handleEhlo();
+
 	email.PacketHandle("EHLO smtp.aktikerem.org\r\n");
 	email.PacketHandle("MAIL FROM:<admin@aktikerem.org>\r\n");
 	email.PacketHandle("RCPT TO:<" + args[0] + ">\r\n");
@@ -52,17 +51,7 @@ this.soc = new Socket(this.smtpServer,this.port);
 this.writer = new PrintWriter(new OutputStreamWriter(soc.getOutputStream(), "UTF-8"), true);
 this.reader = new BufferedReader(new InputStreamReader(soc.getInputStream(), "UTF-8"));
 }
-public void handleEhlo() throws InterruptedException, IOException{ //handels first ehlo message.
 
-Thread.sleep(50);
-writer.print("ehlo smtp.aktikerem.org\r\n");
-writer.flush(); //doesnt listen for the response since it cant fail.
-System.out.println("eglo smtp.aktikerem.org");
-
-handleIS();
-
-
-}
 
 
 public void PacketHandle(String msg) throws IOException, InterruptedException {
@@ -108,23 +97,6 @@ check = cod;
 System.out.println(cod);
 cod = "";
 }
-
-public void startReader() {
-        Thread readerThread = new Thread(() -> {
-            try {
-                String line;
-                while ((line = reader.readLine()) != null) {
-                    System.out.println(line);
-                }
-            } catch (IOException e) {
-                System.err.println("IOException caught: " + e.getMessage());
-            }
-        });
-        readerThread.start();
-    }
-
-
-
 
 
 
