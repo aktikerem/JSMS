@@ -6,24 +6,8 @@ public class clint{
 
 
         public static void main(String args[]) throws IOException, InterruptedException{
-        final String smtpServer = "alt2.gmail-smtp-in.l.google.com";
-        final int port = 25;
-	final int msgID = (int) (Math.random()*100000) + 10000;
-        EMAIL email = new EMAIL(smtpServer,port);
-
-	email.PacketHandle("EHLO smtp.aktikerem.org\r\n");
-	email.PacketHandle("MAIL FROM:<admin@aktikerem.org>\r\n");
-	email.PacketHandle("RCPT TO:<" + args[0] + ">\r\n");
-	email.PacketHandle("DATA\r\n");
-	email.PacketHandle("From: admin@aktikerem.com\r\n");
-	email.PacketHandle("To: " + args[0] + "\r\n");
-	email.PacketHandle("Subject: "+args[1]+"\r\n");
-	email.PacketHandle("Message-ID: <"+msgID+"@aktikerem.org>\r\n");
-//	email.PacketHandle("Date: Tue, 21 May 2024 16:20:00 -0700\r\n ");
-	email.PacketHandle("\r\n"+args[2]+"\r\n");
-	email.PacketHandle(".\r\n");
-	email.PacketHandle("QUIT");
-
+        EMAIL email = new EMAIL("alt2.gmail-smtp-in.l.google.com",25);
+	email.sendEmail(args[0],args[1],args[2]);
 	            
 
 	}
@@ -42,7 +26,7 @@ private Socket soc;
 private PrintWriter writer;
 private BufferedReader reader;
 private int bufCountBytes;
-private String check = "";
+
 
 public EMAIL(String smtpServer, int port) throws IOException {
 this.smtpServer = smtpServer;
@@ -50,33 +34,65 @@ this.port = port;
 this.soc = new Socket(this.smtpServer,this.port);
 this.writer = new PrintWriter(new OutputStreamWriter(soc.getOutputStream(), "UTF-8"), true);
 this.reader = new BufferedReader(new InputStreamReader(soc.getInputStream(), "UTF-8"));
+
+
+
 }
 
 
+public void sendEmail(String address,String subject,String body) throws IOException, InterruptedException{
+
+	final int msgID = (int) (Math.random()*1000000) + 10000;
+
+        PacketHandle("EHLO smtp.aktikerem.org\r\n");
+        PacketHandle("MAIL FROM:<admin@aktikerem.org>\r\n");
+        PacketHandle("RCPT TO:<" + address + ">\r\n");
+        PacketHandle("DATA\r\n");
+        PacketHandle("From: admin@aktikerem.com\r\n");
+        PacketSend("To: " +address+ "\r\n");
+        PacketSend("Subject: "+subject+"\r\n");
+        PacketSend("Message-ID: <"+msgID+"@aktikerem.org>\r\n");
+        PacketSend("\r\n"+body+"\r\n");
+        PacketSend(".\r\n");
+        PacketHandle("QUIT");
+
+
+}
 
 public void PacketHandle(String msg) throws IOException, InterruptedException {
+  handleIS();
   writer.print(msg);
   writer.flush();
   System.out.println(msg);
 
-  handleIS();
+
+
+
+}
+public void PacketSend(String msg) throws IOException, InterruptedException {
+  writer.print(msg);
+  writer.flush();
+  System.out.println(msg);
+
 
 
 
 }
 
 
+
 public void handleIS() throws IOException, InterruptedException {
 
+String cod = "";
+
+while(cod.indexOf("2") == -1){
+cod = "";
+Thread.sleep(10);
 char[] buf = new char[512];
 InputStreamReader ISR = new InputStreamReader(soc.getInputStream(), "UTF-8");
 bufCountBytes += ISR.read(buf, 0,((soc.getInputStream().available())));
-	
-String cod = check;
 
-while(cod.equals(check)){
-cod = "";
-Thread.sleep(100);
+
 for(int i = 0; i<buf.length;i++){
 
 cod += buf[i];
@@ -89,14 +105,13 @@ System.out.println("equals '"+cod+"'");
 throw new IOException("Server Err.");
 }
 
-if((cod.substring(0,1).equals("2")) || (cod.substring(0,1).equals("3"))){
-check = cod;
-}
 
-
-System.out.println(cod);
+System.out.println("here : "+cod);
 cod = "";
 }
+
+
+
 
 
 
