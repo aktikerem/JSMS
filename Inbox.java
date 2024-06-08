@@ -2,6 +2,8 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.io.*;
 import java.util.Scanner;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 class Inbox {
 
@@ -71,11 +73,11 @@ this.transId = transId;
 }
 
 
-public void PacketHandle(String msg,String cword) throws IOException, InterruptedException {
+public String PacketHandle(String msg,String cword) throws IOException, InterruptedException {
   writer.print(msg);
   writer.flush();
   System.out.println(msg);
-  handleIS(cword);
+  return handleIS(cword);
 
 
 
@@ -93,9 +95,9 @@ public void PacketSend(String msg) throws IOException, InterruptedException {
 public void HandleTransId(){
   try {  
       
-      FileWriter myWriter = new FileWriter("LastTransId.txt");
-      myWriter.write(transId+"");
-      myWriter.close();
+      FileWriter FW = new FileWriter("lastTransId.txt", false);
+      FW.write(transId+"");
+      FW.close();
      
    
   } catch (IOException e) {
@@ -118,26 +120,56 @@ public void startHandling() throws IOException, InterruptedException {
 //  PacketSend("250-ENHANCEDSTATUSCODES \r\n");
 //  PacketSend("250-PIPELINING\r\n");
 //  PacketSend("250-CHUNKING\r\n");
-  PacketHandle("250 SMTPUTF8\r\n","MAIL");
-  PacketHandle("250 2.1.0 OK 000000000-"+ transId +".220 - gsmtp :3 \r\n","RCPT");
+  String From = PacketHandle("250 SMTPUTF8\r\n","MAIL");
+  String To = PacketHandle("250 2.1.0 OK 000000000-"+ transId +".220 - gsmtp :3 \r\n","RCPT");
   PacketHandle("250 2.1.0 OK 000000000-"+ transId +".220 - gsmtp :3 \r\n","DATA");
-  PacketHandle("354 Go ahead 000000000-"+ transId +".220 - gsmtp :3 \r\n","g");
-  PacketHandle("250 2.1.0 OK 000000000-"+ transId +".220 - gsmtp :3 \r\n","g");
-  PacketHandle("250 2.1.0 OK 000000000-"+ transId +".220 - gsmtp :3 \r\n","g");
- 
+  String Data = PacketHandle("354 Go ahead 000000000-"+ transId +".220 - gsmtp :3 \r\n","\r\n.\r\n");
+
+  PacketHandle("250 2.1.0 OK 000000000-"+ transId +".220 - gsmtp :3 \r\n","QUIT");
+  PacketSend("250 2.1.0 OK 000000000-"+ transId +".220 - gsmtp :3 \r\n");
+
+
+
+  Pattern MSGID_Pattern = Pattern.compile("Message-ID: <(.*?)>");
+  Pattern SUBJECT_Pattern = Pattern.compile("Subject: (.*?)\r\n");
+
+
+  Matcher MSGID_Matcher = MSGID_Pattern.matcher(Data); 
+  if (MSGID_Matcher.find()) {
+    System.out.println("Message-ID: " + MSGID_Matcher.group(1));
+  } else {
+    System.out.println("Message-ID not found.");
+  }
+
+  Matcher SUBJECT_Matcher = SUBJECT_Pattern.matcher(Data);
+  if (SUBJECT_Matcher.find()) {
+    System.out.println("Subject: " + SUBJECT_Matcher.group(1));
+  } else {
+    System.out.println("Subject not found.");
+  }
+
+  String body = Data.substring(Data.indexOf("<div"),Data.lastIndexOf("div>")+4);
+  if (body.length() >= 1) {
+    System.out.println("Body: " + body) ;
+  } else {
+    System.out.println("Body not found.");
+  }
+  
+
+  message rec_email = new message(SUBJECT_Matcher.group(1), From, To, body, MSGID_Matcher.group(1), (transId+""));
+  rec_mail.pushEmail();
+   
 
 
 }
-
-public void handleIS(String cword) throws IOException, InterruptedException {
+public String handleIS(String cword) throws IOException, InterruptedException {
 
 String cod = "";
 int count = 0;
 while(cod.indexOf(cword) == -1 && count < 7000){
-cod = "";
 Thread.sleep(10);
 count +=10;
-char[] buf = new char[4112];
+char[] buf = new char[15720];
 InputStreamReader ISR = new InputStreamReader(soc.getInputStream(), "UTF-8");
 ISR.read(buf, 0,((soc.getInputStream().available())));
 
@@ -157,7 +189,8 @@ throw new IOException("Timeout reached");
 
 
 System.out.println("here : "+cod);
-cod = "";
+return cod;
+
 }
 
 
