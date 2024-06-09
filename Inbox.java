@@ -5,6 +5,12 @@ import java.util.Scanner;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+//import java.sql.Connection;
+//import java.sql.DriverManager;
+//import java.sql.SQLException;
+
+import java.sql.*;
+
 class Inbox {
 
     private static final int port = 25; // Define the port number
@@ -120,8 +126,8 @@ public void startHandling() throws IOException, InterruptedException {
 //  PacketSend("250-ENHANCEDSTATUSCODES \r\n");
 //  PacketSend("250-PIPELINING\r\n");
 //  PacketSend("250-CHUNKING\r\n");
-  String From = PacketHandle("250 SMTPUTF8\r\n","MAIL");
-  String To = PacketHandle("250 2.1.0 OK 000000000-"+ transId +".220 - gsmtp :3 \r\n","RCPT");
+  String FromData = PacketHandle("250 SMTPUTF8\r\n","MAIL");
+  String ToData = PacketHandle("250 2.1.0 OK 000000000-"+ transId +".220 - gsmtp :3 \r\n","RCPT");
   PacketHandle("250 2.1.0 OK 000000000-"+ transId +".220 - gsmtp :3 \r\n","DATA");
   String Data = PacketHandle("354 Go ahead 000000000-"+ transId +".220 - gsmtp :3 \r\n","\r\n.\r\n");
 
@@ -154,10 +160,25 @@ public void startHandling() throws IOException, InterruptedException {
   } else {
     System.out.println("Body not found.");
   }
+
+  String From = FromData.substring(FromData.indexOf("<"),FromData.lastIndexOf(">")+1);
+  if (From.length() >= 1) {
+    System.out.println("From: " + From) ;
+  } else {
+    System.out.println("From not found.");
+  }
+
+  String To = ToData.substring(ToData.indexOf("<"),ToData.lastIndexOf(">")+1);
+  if (To.length() >= 1) {
+    System.out.println("To: " + To) ;
+  } else {
+    System.out.println("To not found.");
+  }
+
   
 
   message rec_email = new message(SUBJECT_Matcher.group(1), From, To, body, MSGID_Matcher.group(1), (transId+""));
-  rec_mail.pushEmail();
+  rec_email.pushEmail();
    
 
 
@@ -216,6 +237,39 @@ this.TransId = TransId.toString();
 
 
 }
+
+
+public void pushEmail() {
+    String url = "jdbc:mariadb://172.232.207.186:3306/Inbox";
+    String username = "ovhcreator";
+    String password = "TqDMgdMV4yRvff@memedi";
+
+    String sql = "INSERT INTO emails (`msg_id`, `subject`, `from`, `to`, `body`, `trans_id`) VALUES (?, ?, ?, ?, ?, ?)";
+
+    try (Connection connection = DriverManager.getConnection(url, username, password);
+         PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
+
+        preparedStatement.setString(1, MsgId);
+        preparedStatement.setString(2, Subject);
+        preparedStatement.setString(3, From);
+        preparedStatement.setString(4, To);
+        preparedStatement.setString(5, Body);
+        preparedStatement.setString(6, TransId);
+
+        int rowsAffected = preparedStatement.executeUpdate();
+
+        if (rowsAffected > 0) {
+            System.out.println("Email pushed successfully.");
+        } else {
+            System.out.println("Failed to push email.");
+        }
+
+    } catch (SQLException e) {
+        System.out.println(e);
+    }
+}
+
+
 
 public String getSubject(){
 return this.Subject;
